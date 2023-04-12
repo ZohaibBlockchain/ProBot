@@ -9,6 +9,8 @@ const binance = new Binance().options({
   APIKEY: process.env.API_KEY,
   APISECRET: process.env.API_SECRET,
 });
+
+
 export const IterationTime = 1;//one second
 const coolDownProfit = (3600 / IterationTime);//5 minutes
 const coolDownLoss = (3600 / IterationTime);//15 minutes
@@ -16,6 +18,8 @@ const desireProfitPercentage = 10;
 const totalPNL = 0;
 let ProfitableTrades = 0;
 let lossTrades = 0;
+let engineFlag = true;
+
 
 let InstrumentRecharge = { BTCUSDT: [{ cooldown: false, buyPrice: 0, sellPrice: 0, ticksLeft: 0, result: 'None' }, { cooldown: false, buyPrice: 0, sellPrice: 0, ticksLeft: 0, result: 'None' }], ETHUSDT: [{ cooldown: false, buyPrice: 0, sellPrice: 0, ticksLeft: 0, result: 'None' }, { cooldown: false, buyPrice: 0, sellPrice: 0, ticksLeft: 0, result: 'None' }], LTCUSDT: [{ cooldown: false, buyPrice: 0, sellPrice: 0, ticksLeft: 0, result: 'None' }, { cooldown: false, buyPrice: 0, sellPrice: 0, ticksLeft: 0, result: 'None' }] };
 let BTCPrice = [];
@@ -167,7 +171,7 @@ function getPriceArr(symbol) {
 
 
 
-let engineFlag = true;
+
 export async function _tradeEngine() {
   resetCoolDown();
 
@@ -205,8 +209,7 @@ export async function _tradeEngine() {
                   signalInstrument = element;
               });
 
-              let signalSide = getSellFlag(signalInstrument.flags);
-              if (signalSide != undefined) {
+              let signalSide = signalInstrument.flags;
                 if (blackFlag(side, signalSide)) {
                   engineFlag = false;
                   let prvTrade = await settlePreviousTrade({ side: side, tradeAmount: Math.abs(instruments.positionAmt), symbol: instruments.symbol });
@@ -223,9 +226,6 @@ export async function _tradeEngine() {
                 else {
                   console.log('The profit margin is not sufficient!');
                 }
-              } else {
-                //console.log('Unbalanced flags detected!');
-              }
             }
           });
           // console.log('------Trade starting Block----')
@@ -243,8 +243,8 @@ export async function _tradeEngine() {
               // console.log('Already trade placed!');
               // console.log('------End Trade starting Block----')
             } else {
-              let side = getBuyFlag(parsedIns[i].flags);
-              if (side != undefined) {
+              let side = parsedIns[i].flags;
+            
                 if (!onCoolDown(parsedIns[i].symbol, side)) {
                   let price = await getInstrumentPrice(parsedIns[i].symbol);
                   let positionAmt = parsedIns[i].positionAmt;
@@ -266,10 +266,6 @@ export async function _tradeEngine() {
                 } else {
                   console.log('Instrument on coolDown wait please');
                 }
-              }
-              else {
-                // console.log('Unbalanced flags detected');
-              }
             }
           }
         } else {
@@ -298,7 +294,7 @@ async function getTradeInfo() {
     const options = {
       hostname: '3.10.246.161',
       port: 80,
-      path: '/getsignals',
+      path: '/getspecialsignal',
       method: 'GET'
     };
 
