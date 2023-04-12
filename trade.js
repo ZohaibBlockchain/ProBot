@@ -485,18 +485,3 @@ function getType(value) {
     return "long";
   }
 }
-
-
-//flags[3] is a 
-
-function getSellFlag(flags) {
-    return flags[3];
-}
-
-
-
-function getBuyFlag(flags) {
-    return flags[3];
-}
-
-
