@@ -174,7 +174,6 @@ function getPriceArr(symbol) {
 
 export async function _tradeEngine() {
   resetCoolDown();
-
   try {
     let totalInstruments = [];
     await getPositionData().then(async _data => {
@@ -210,22 +209,22 @@ export async function _tradeEngine() {
               });
 
               let signalSide = signalInstrument.flags;
-                if (blackFlag(side, signalSide)) {
-                  engineFlag = false;
-                  let prvTrade = await settlePreviousTrade({ side: side, tradeAmount: Math.abs(instruments.positionAmt), symbol: instruments.symbol });
-                  if (prvTrade["symbol"] == instruments.symbol) {//confirmed closed
-                    tradeComplete(instruments.symbol, side, instruments.entryPrice, instruments.markPrice, "LOSS", desireProfit.pnl);
-                    engineFlag = true;
-                  }
-                  else {
-                    console.log('The previous trade could not be closed!');
-                    engineFlag = true;
-                    return;
-                  }
+              if (blackFlag(side, signalSide)) {
+                engineFlag = false;
+                let prvTrade = await settlePreviousTrade({ side: side, tradeAmount: Math.abs(instruments.positionAmt), symbol: instruments.symbol });
+                if (prvTrade["symbol"] == instruments.symbol) {//confirmed closed
+                  tradeComplete(instruments.symbol, side, instruments.entryPrice, instruments.markPrice, "LOSS", desireProfit.pnl);
+                  engineFlag = true;
                 }
                 else {
-                  console.log('The profit margin is not sufficient!');
+                  console.log('The previous trade could not be closed!');
+                  engineFlag = true;
+                  return;
                 }
+              }
+              else {
+                console.log('The profit margin is not sufficient!');
+              }
             }
           });
           // console.log('------Trade starting Block----')
@@ -244,7 +243,7 @@ export async function _tradeEngine() {
               // console.log('------End Trade starting Block----')
             } else {
               let side = parsedIns[i].flags;
-            
+              if (side != 'NEW') {
                 if (!onCoolDown(parsedIns[i].symbol, side)) {
                   let price = await getInstrumentPrice(parsedIns[i].symbol);
                   let positionAmt = parsedIns[i].positionAmt;
@@ -266,6 +265,9 @@ export async function _tradeEngine() {
                 } else {
                   console.log('Instrument on coolDown wait please');
                 }
+              } else {
+                console.log("Starting...");
+              }
             }
           }
         } else {
